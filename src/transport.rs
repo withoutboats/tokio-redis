@@ -1,6 +1,5 @@
 use {Cmd, Value};
 use parser::Parser;
-use types::RedisError;
 use tokio_io::{AsyncRead, AsyncWrite};
 use futures::{Async, AsyncSink, Poll, Stream, Sink, StartSend};
 use std::mem;

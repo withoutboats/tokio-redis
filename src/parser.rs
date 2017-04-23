@@ -1,6 +1,6 @@
 use std::io::{self, Read, BufReader};
 
-use types::{RedisResult, RedisError, Value, ErrorKind, make_extension_error};
+use types::{RedisResult, Value, ErrorKind, make_extension_error};
 
 
 /// The internal redis response parser.

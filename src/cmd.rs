@@ -1,11 +1,4 @@
-use types::{
-    ToRedisArgs,
-    FromRedisValue,
-    Value,
-    RedisResult,
-    ErrorKind,
-    from_redis_value
-};
+use types::ToRedisArgs;
 
 #[derive(Clone)]
 enum Arg<'a> {

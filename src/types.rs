@@ -1,5 +1,4 @@
 use futures::{Poll, Async};
-use tokio_proto;
 use std::error;
 use std::fmt;
 use std::io;
