@@ -1,15 +1,15 @@
 [package]
+authors = ["Without Boats <woboats@gmail.com>", "Carl Lerche <me@carllerche.com>", "Armin Ronacher <armin.ronacher@active-4.com>"]
 name = "tokio-redis"
-version = "0.1.0"
-authors = ["Carl Lerche <me@carllerche.com>", "Armin Ronacher <armin.ronacher@active-4.com>"]
+version = "0.2.0"
 
 [dependencies]
-log = "0.3.6"
 futures = "0.1"
-tokio-core = "0.1"
-tokio-proto = "0.1"
+log = "0.3.6"
+tokio-core = "0.1.6"
+tokio-io = "0.1.1"
+tokio-proto = "0.1.1"
 tokio-service = "0.1"
 
 [dev-dependencies]
 env_logger = "0.3.0"
-
