@@ -93,6 +93,20 @@ impl Client {
 
         self.call(cmd)
     }
+
+    pub fn keys<K: ToRedisArgs>(&mut self, key: K) -> Response {
+        let mut cmd = Cmd::new();
+        cmd.arg("KEYS").arg(key);
+
+        self.call(cmd)
+    }
+
+    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&mut self, key: K, value: V, seconds: usize) -> Response {
+        let mut cmd = Cmd::new();
+        cmd.arg("SETEX").arg(key).arg(seconds).arg(value);
+
+        self.call(cmd)
+    }
 }
 
 impl Service for Client {
