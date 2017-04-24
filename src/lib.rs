@@ -79,7 +79,7 @@ pub struct Client {
 
 impl Client {
     /// Get the value of a key.  If key is a vec this becomes an `MGET`.
-    pub fn get<K: ToRedisArgs>(&mut self, key: K) -> Response {
+    pub fn get<K: ToRedisArgs>(&self, key: K) -> Response {
         let mut cmd = Cmd::new();
         cmd.arg(if key.is_single_arg() { "GET" } else { "MGET" }).arg(key);
 
@@ -87,21 +87,21 @@ impl Client {
     }
 
     /// Set the string value of a key.
-    pub fn set<K: ToRedisArgs, V: ToRedisArgs>(&mut self, key: K, value: V) -> Response {
+    pub fn set<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V) -> Response {
         let mut cmd = Cmd::new();
         cmd.arg("SET").arg(key).arg(value);
 
         self.call(cmd)
     }
 
-    pub fn keys<K: ToRedisArgs>(&mut self, key: K) -> Response {
+    pub fn keys<K: ToRedisArgs>(&self, key: K) -> Response {
         let mut cmd = Cmd::new();
         cmd.arg("KEYS").arg(key);
 
         self.call(cmd)
     }
 
-    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&mut self, key: K, value: V, seconds: usize) -> Response {
+    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V, seconds: usize) -> Response {
         let mut cmd = Cmd::new();
         cmd.arg("SETEX").arg(key).arg(seconds).arg(value);
 
