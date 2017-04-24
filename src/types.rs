@@ -412,7 +412,7 @@ impl InfoDict {
 /// Used to convert a value into one or multiple redis argument
 /// strings.  Most values will produce exactly one item but in
 /// some cases it might make sense to produce more than one.
-pub trait ToRedisArgs: Sized {
+pub trait ToRedisArgs {
     /// This converts the value into a vector of bytes.  Each item
     /// is a single argument.  Most items generate a vector of a
     /// single item.
@@ -439,7 +439,7 @@ pub trait ToRedisArgs: Sized {
     /// This only exists internally as a workaround for the lack of
     /// specialization.
     #[doc(hidden)]
-    fn make_arg_vec(items: &[Self]) -> Vec<Vec<u8>> {
+    fn make_arg_vec(items: &[Self]) -> Vec<Vec<u8>> where Self: Sized {
         let mut rv = vec![];
         for item in items.iter() {
             rv.extend(item.to_redis_args().into_iter());
@@ -448,7 +448,7 @@ pub trait ToRedisArgs: Sized {
     }
 
     #[doc(hidden)]
-    fn is_single_vec_arg(items: &[Self]) -> bool {
+    fn is_single_vec_arg(items: &[Self]) -> bool where Self: Sized {
         items.len() == 1 && items[0].is_single_arg()
     }
 }
@@ -513,13 +513,7 @@ impl ToRedisArgs for String {
     }
 }
 
-impl<'a> ToRedisArgs for &'a String {
-    fn to_redis_args(&self) -> Vec<Vec<u8>> {
-        vec![self.as_bytes().to_vec()]
-    }
-}
-
-impl<'a> ToRedisArgs for &'a str {
+impl ToRedisArgs for str {
     fn to_redis_args(&self) -> Vec<Vec<u8>> {
         vec![self.as_bytes().to_vec()]
     }
@@ -535,13 +529,13 @@ impl<T: ToRedisArgs> ToRedisArgs for Vec<T> {
     }
 }
 
-impl<'a, T: ToRedisArgs> ToRedisArgs for &'a [T] {
+impl<T: ToRedisArgs> ToRedisArgs for [T] {
     fn to_redis_args(&self) -> Vec<Vec<u8>> {
-        ToRedisArgs::make_arg_vec(*self)
+        ToRedisArgs::make_arg_vec(self)
     }
 
     fn is_single_arg(&self) -> bool {
-        ToRedisArgs::is_single_vec_arg(*self)
+        ToRedisArgs::is_single_vec_arg(self)
     }
 }
 
@@ -565,6 +559,12 @@ impl<T: ToRedisArgs> ToRedisArgs for Option<T> {
             Some(ref x) => x.is_single_arg(),
             None => false,
         }
+    }
+}
+
+impl<'a, T: ?Sized + ToRedisArgs> ToRedisArgs for &'a T {
+    fn to_redis_args(&self) -> Vec<Vec<u8>> {
+        T::to_redis_args(*self)
     }
 }
 
