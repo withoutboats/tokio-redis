@@ -79,11 +79,11 @@ pub struct Client {
     inner: ClientService<TcpStream, RedisProto>,
 }
 
-type ClientResponse<V> = Box<Future<Item = V, Error = Error>>;
+type ClientResponse<'a, V> = Box<Future<Item = V, Error = Error> + 'a>;
 
 impl Client {
     /// Get the value of a key.  If key is a vec this becomes an `MGET`.
-    pub fn get<K: ToRedisArgs, V: FromRedisValue + 'static>(&self, key: K) -> ClientResponse<V> {
+    pub fn get<'a, K: ToRedisArgs, V: FromRedisValue + 'a>(&self, key: K) -> ClientResponse<'a, V> {
         let mut cmd = Cmd::new();
         cmd.arg(if key.is_single_arg() { "GET" } else { "MGET" }).arg(key);
 
@@ -94,7 +94,7 @@ impl Client {
     }
 
     /// Set the string value of a key.
-    pub fn set<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V) -> ClientResponse<Option<Okay>> {
+    pub fn set<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V) -> ClientResponse<'static, Option<Okay>> {
         let mut cmd = Cmd::new();
         cmd.arg("SET").arg(key).arg(value);
 
@@ -104,7 +104,7 @@ impl Client {
         }))
     }
 
-    pub fn keys<K: ToRedisArgs, V: FromRedisValue + 'static>(&self, key: K) -> ClientResponse<Vec<V>> {
+    pub fn keys<'a, K: ToRedisArgs, V: FromRedisValue + 'a>(&self, key: K) -> ClientResponse<'a, Vec<V>> {
         let mut cmd = Cmd::new();
         cmd.arg("KEYS").arg(key);
 
@@ -114,7 +114,7 @@ impl Client {
         }))
     }
 
-    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V, seconds: usize) -> ClientResponse<Option<Okay>> {
+    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V, seconds: usize) -> ClientResponse<'static, Option<Okay>> {
         let mut cmd = Cmd::new();
         cmd.arg("SETEX").arg(key).arg(seconds).arg(value);
 
