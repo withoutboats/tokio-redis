@@ -920,3 +920,14 @@ impl<T: FromRedisValue> FromRedisValue for Option<T> {
 pub fn from_redis_value<T: FromRedisValue>(v: &Value) -> RedisResult<T> {
     FromRedisValue::from_redis_value(v)
 }
+
+pub struct Okay;
+
+impl FromRedisValue for Okay {
+    fn from_redis_value(v: &Value) -> RedisResult<Okay> {
+        match *v {
+            Value::Okay => Ok(Okay),
+            _           => invalid_type_error!(v, "Response was not OK."),
+        }
+    }
+}

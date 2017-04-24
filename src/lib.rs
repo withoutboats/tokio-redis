@@ -45,6 +45,8 @@ pub use types::{
     /* conversion traits */
     FromRedisValue,
     ToRedisArgs,
+
+    Okay,
 };
 
 pub type Response = Box<Future<Item = Value, Error = io::Error>>;
@@ -77,35 +79,49 @@ pub struct Client {
     inner: ClientService<TcpStream, RedisProto>,
 }
 
+type ClientResponse<V> = Box<Future<Item = V, Error = Error>>;
+
 impl Client {
     /// Get the value of a key.  If key is a vec this becomes an `MGET`.
-    pub fn get<K: ToRedisArgs>(&self, key: K) -> Response {
+    pub fn get<K: ToRedisArgs, V: FromRedisValue + 'static>(&self, key: K) -> ClientResponse<V> {
         let mut cmd = Cmd::new();
         cmd.arg(if key.is_single_arg() { "GET" } else { "MGET" }).arg(key);
 
-        self.call(cmd)
+        Box::new(self.call(cmd).then(|res| match res {
+            Ok(v)   => V::from_redis_value(&v),
+            Err(e)  => Err(e.into()),
+        }))
     }
 
     /// Set the string value of a key.
-    pub fn set<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V) -> Response {
+    pub fn set<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V) -> ClientResponse<Option<Okay>> {
         let mut cmd = Cmd::new();
         cmd.arg("SET").arg(key).arg(value);
 
-        self.call(cmd)
+        Box::new(self.call(cmd).then(|res| match res {
+            Ok(v)   => Option::from_redis_value(&v),
+            Err(e)  => Err(e.into()),
+        }))
     }
 
-    pub fn keys<K: ToRedisArgs>(&self, key: K) -> Response {
+    pub fn keys<K: ToRedisArgs, V: FromRedisValue + 'static>(&self, key: K) -> ClientResponse<Vec<V>> {
         let mut cmd = Cmd::new();
         cmd.arg("KEYS").arg(key);
 
-        self.call(cmd)
+        Box::new(self.call(cmd).then(|res| match res {
+            Ok(v)   => Vec::from_redis_value(&v),
+            Err(e)  => Err(e.into()),
+        }))
     }
 
-    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V, seconds: usize) -> Response {
+    pub fn set_ex<K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V, seconds: usize) -> ClientResponse<Option<Okay>> {
         let mut cmd = Cmd::new();
         cmd.arg("SETEX").arg(key).arg(seconds).arg(value);
 
-        self.call(cmd)
+        Box::new(self.call(cmd).then(|res| match res {
+            Ok(v)   => Option::from_redis_value(&v),
+            Err(e)  => Err(e.into()),
+        }))
     }
 }
 
