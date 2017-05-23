@@ -123,6 +123,28 @@ impl Client {
             Err(e)  => Err(e.into()),
         }))
     }
+
+    /// Set the string value of a key if it does not exist.
+    pub fn setnx<'a, K: ToRedisArgs, V: ToRedisArgs>(&self, key: K, value: V) -> ClientResponse<'a, Option<Okay>> {
+        let mut cmd = Cmd::new();
+        cmd.arg("SETNX").arg(key).arg(value);
+
+        Box::new(self.call(cmd).then(|res| match res {
+            Ok(v)   => Option::from_redis_value(&v),
+            Err(e)  => Err(e.into()),
+        }))
+    }
+
+    /// Increment the value of an integer key, from 0 if it doesn't exist.
+    pub fn incr<'a, K: ToRedisArgs, V: FromRedisValue + 'a>(&self, key: K) -> ClientResponse<'a, V> {
+        let mut cmd = Cmd::new();
+        cmd.arg("INCR").arg(key);
+
+        Box::new(self.call(cmd).then(|res| match res {
+            Ok(v)   => V::from_redis_value(&v),
+            Err(e)  => Err(e.into()),
+        }))
+    }
 }
 
 impl Service for Client {
